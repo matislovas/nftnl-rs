@@ -69,6 +69,10 @@ pub use rule::Rule;
 
 pub mod set;
 
+mod quota;
+pub use quota::Quota;
+pub use quota::QuotaType;
+
 /// The type of the message as it's sent to netfilter. A message consists of an object, such as a
 /// [`Table`], [`Chain`] or [`Rule`] for example, and a [`MsgType`] to describe what to do with
 /// that object. If a [`Table`] object is sent with `MsgType::Add` then that table will be added

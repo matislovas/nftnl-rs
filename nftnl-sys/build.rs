@@ -13,10 +13,8 @@ cfg_if::cfg_if! {
         const MIN_VERSION: &str = "1.0.9";
     } else if #[cfg(feature = "nftnl-1-0-8")] {
         const MIN_VERSION: &str = "1.0.8";
-    } else if #[cfg(feature = "nftnl-1-0-7")] {
-        const MIN_VERSION: &str = "1.0.7";
     } else {
-        const MIN_VERSION: &str = "1.0.6";
+        const MIN_VERSION: &str = "1.0.7";
     }
 }
 

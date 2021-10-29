@@ -3,6 +3,7 @@ use nftnl_sys::{self as sys, libc};
 use std::{
     collections::HashSet,
     ffi::{c_void, CStr, CString},
+    fmt,
     os::raw::c_char,
 };
 
@@ -67,6 +68,24 @@ unsafe impl crate::NlMsg for Table {
 impl Drop for Table {
     fn drop(&mut self) {
         unsafe { sys::nftnl_table_free(self.table) };
+    }
+}
+
+impl<'a> fmt::Debug for Table {
+    /// Return a string representation of the table.
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut buffer: [u8; 4096] = [0; 4096];
+        unsafe {
+            sys::nftnl_table_snprintf(
+                buffer.as_mut_ptr() as *mut c_char,
+                buffer.len(),
+                self.table,
+                sys::NFTNL_OUTPUT_DEFAULT,
+                0,
+            );
+        }
+        let s = unsafe { CStr::from_ptr(buffer.as_ptr() as *const c_char) };
+        write!(fmt, "{:?}", s)
     }
 }
 

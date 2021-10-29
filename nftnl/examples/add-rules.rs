@@ -37,7 +37,19 @@
 //! ```
 
 use ipnetwork::{IpNetwork, Ipv4Network};
-use nftnl::{nft_expr, nftnl_sys::libc, Batch, Chain, FinalizedBatch, ProtoFamily, Rule, Table};
+use nftnl::{
+    nft_expr,
+    nftnl_sys::libc,
+    Batch,
+    Chain,
+    FinalizedBatch,
+    ProtoFamily,
+    Rule,
+    Table,
+    Quota,
+    QuotaType,
+    expr::TcpFlags as TcpFlags
+};
 use std::{
     ffi::{self, CString},
     io,
@@ -45,9 +57,11 @@ use std::{
 };
 
 const TABLE_NAME: &str = "example-table";
+const QUOTA_NAME: &str = "example-quota";
 const OUT_CHAIN_NAME: &str = "chain-for-outgoing-packets";
 const IN_CHAIN_NAME: &str = "chain-for-incoming-packets";
 
+// TODO add quota, log examples, tcp flags proper examples
 fn main() -> Result<(), Error> {
     // Create a batch. This is used to store all the netlink messages we will later send.
     // Creating a new batch also automatically writes the initial batch begin message needed
@@ -56,9 +70,16 @@ fn main() -> Result<(), Error> {
 
     // Create a netfilter table operating on both IPv4 and IPv6 (ProtoFamily::Inet)
     let table = Table::new(&CString::new(TABLE_NAME).unwrap(), ProtoFamily::Inet);
+
     // Add the table to the batch with the `MsgType::Add` type, thus instructing netfilter to add
     // this table under its `ProtoFamily::Inet` ruleset.
     batch.add(&table, nftnl::MsgType::Add);
+
+
+    let mut quota_over = Quota::new(&CString::new(QUOTA_NAME).unwrap(), &table);
+    quota_over.set_type(QuotaType::Over);
+    quota_over.set_limit(1073741824 as u64);
+    batch.add(&quota_over, nftnl::MsgType::Add);
 
     // Create input and output chains under the table we created above.
     let mut out_chain = Chain::new(&CString::new(OUT_CHAIN_NAME).unwrap(), &table);
@@ -98,8 +119,8 @@ fn main() -> Result<(), Error> {
     // processed by the next rule in the chain instead.
     allow_loopback_in_rule.add_expr(&nft_expr!(cmp == lo_iface_index));
 
-    // Add a verdict expression to the rule. Any packet getting this far in the expression
-    // processing without failing any expression will be given the verdict added here.
+    // Add a verdict expression to the rule. Any packet getting this far in the expreshsion
+    // processing without failing any expression will be given the verdict added ere.
     allow_loopback_in_rule.add_expr(&nft_expr!(verdict accept));
 
     // Add the rule to the batch.
@@ -114,18 +135,30 @@ fn main() -> Result<(), Error> {
 
     // Load the `nfproto` metadata into the netfilter register. This metadata denotes which layer3
     // protocol the packet being processed is using.
-    block_out_to_private_net_rule.add_expr(&nft_expr!(meta nfproto));
+    //block_out_to_private_net_rule.add_expr(&nft_expr!(meta nfproto));
     // Check if the currently processed packet is an IPv4 packet. This must be done before payload
     // data assuming the packet uses IPv4 can be loaded in the next expression.
-    block_out_to_private_net_rule.add_expr(&nft_expr!(cmp == libc::NFPROTO_IPV4 as u8));
+    //block_out_to_private_net_rule.add_expr(&nft_expr!(cmp == libc::NFPROTO_IPV4 as u8));
 
     // Load the IPv4 destination address into the netfilter register.
-    block_out_to_private_net_rule.add_expr(&nft_expr!(payload ipv4 daddr));
+    //block_out_to_private_net_rule.add_expr(&nft_expr!(payload ipv4 daddr));
     // Mask out the part of the destination address that is not part of the network bits. The result
     // of this bitwise masking is stored back into the same netfilter register.
-    block_out_to_private_net_rule.add_expr(&nft_expr!(bitwise mask private_net.mask(), xor 0));
+    //block_out_to_private_net_rule.add_expr(&nft_expr!(bitwise mask private_net.mask(), xor 0));
     // Compare the result of the masking with the IP of the network we are interested in.
-    block_out_to_private_net_rule.add_expr(&nft_expr!(cmp == private_net.ip()));
+    //block_out_to_private_net_rule.add_expr(&nft_expr!(cmp == private_net.ip()));
+
+    // block_out_to_private_net_rule.add_expr(&nft_expr!(meta nfproto));
+    // block_out_to_private_net_rule.add_expr(&nft_expr!(cmp == libc::NFPROTO_IPV4 as u8));
+    block_out_to_private_net_rule.add_expr(&nft_expr!(meta l4proto));
+    block_out_to_private_net_rule.add_expr(&nft_expr!(cmp == libc::IPPROTO_TCP as u8));
+
+    // block_out_to_private_net_rule.add_expr(&nft_expr!(payload tcp dport));
+    // block_out_to_private_net_rule.add_expr(&nft_expr!(cmp == (80 as u16)));
+
+    block_out_to_private_net_rule.add_expr(&nft_expr!(payload tcp flags));
+    block_out_to_private_net_rule.add_expr(&nft_expr!(bitwise mask (TcpFlags::SYN | TcpFlags::ACK), xor (0 as u8)));
+    block_out_to_private_net_rule.add_expr(&nft_expr!(cmp == (TcpFlags::SYN | TcpFlags::ACK)));
 
     // Add a packet counter to the rule. Shows how many packets have been evaluated against this
     // expression. Since expressions are evaluated from first to last, putting this counter before
@@ -133,7 +166,10 @@ fn main() -> Result<(), Error> {
     // those expressions. Because the counter would then be evaluated before it fails a check.
     // Similarly, if the counter was added after the verdict it would always remain at zero. Since
     // when the packet hits the verdict expression any further processing of expressions stop.
-    block_out_to_private_net_rule.add_expr(&nft_expr!(counter));
+    //block_out_to_private_net_rule.add_expr(&nft_expr!(counter));
+    block_out_to_private_net_rule.add_expr(&nft_expr!(quota &quota_over));
+
+    block_out_to_private_net_rule.add_expr(&nft_expr!(log));
 
     // Accept all the packets matching the rule so far.
     block_out_to_private_net_rule.add_expr(&nft_expr!(verdict accept));
@@ -160,6 +196,8 @@ fn main() -> Result<(), Error> {
         nftnl::expr::TransportHeaderField::Icmpv6(nftnl::expr::Icmpv6HeaderField::Code),
     ));
     allow_router_solicitation.add_expr(&nft_expr!(cmp == 0u8));
+
+    allow_router_solicitation.add_expr(&nft_expr!(log .group(8)));
 
     allow_router_solicitation.add_expr(&nft_expr!(verdict accept));
 

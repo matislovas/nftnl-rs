@@ -60,6 +60,8 @@ impl<M: ToSlice, X: ToSlice> Expression for Bitwise<M, X> {
     }
 }
 
+
+
 #[macro_export]
 macro_rules! nft_expr_bitwise {
     (mask $mask:expr,xor $xor:expr) => {

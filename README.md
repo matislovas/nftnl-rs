@@ -29,3 +29,5 @@ This crate has the same features as the sys crate, and selecting version works t
 [`nftnl-sys`]: https://crates.io/crates/nftnl-sys
 
 License: MIT/Apache-2.0
+
+<!-- TODO add some info why it is forked -->

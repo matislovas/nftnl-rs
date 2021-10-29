@@ -27,3 +27,4 @@ nftnl-sys = { path = "../nftnl-sys", version = "0.6" }
 [dev-dependencies]
 ipnetwork = "0.16"
 mnl = "0.2"
+rtnetlink = "0.8.1"

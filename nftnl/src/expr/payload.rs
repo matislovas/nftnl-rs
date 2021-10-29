@@ -213,6 +213,7 @@ impl HeaderField for TransportHeaderField {
 pub enum TcpHeaderField {
     Sport,
     Dport,
+    Flags,
 }
 
 impl HeaderField for TcpHeaderField {
@@ -221,6 +222,7 @@ impl HeaderField for TcpHeaderField {
         match *self {
             Sport => 0,
             Dport => 2,
+            Flags => 13,
         }
     }
 
@@ -229,6 +231,7 @@ impl HeaderField for TcpHeaderField {
         match *self {
             Sport => 2,
             Dport => 2,
+            Flags => 1,
         }
     }
 }
@@ -322,6 +325,9 @@ macro_rules! nft_expr_payload {
     };
     (@tcp_field dport) => {
         $crate::expr::TcpHeaderField::Dport
+    };
+    (@tcp_field flags) => {
+        $crate::expr::TcpHeaderField::Flags
     };
 
     (@udp_field sport) => {

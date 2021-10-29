@@ -10,3 +10,4 @@
 #include <libnftnl/table.h>
 #include <libnftnl/trace.h>
 #include <libnftnl/udata.h>
+#include <linux/netfilter/nf_tables.h>

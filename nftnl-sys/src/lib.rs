@@ -24,7 +24,7 @@
 //! [`bindgen`] via the `generate_bindings.sh` script in this repository.
 //!
 //! Only one version of `libnftnl` can be exposed via this crate. By default the crate exports the
-//! bindings for the oldest supported version (`libnftnl-1.0.6`). To get newer versions activate the
+//! bindings for the oldest supported version (`libnftnl-1.0.7`). To get newer versions activate the
 //! corresponding features. See `Cargo.toml` for available features/versions.
 //!
 //! So for example, to get bindings to `libnftnl-1.0.9` depend on this crate like this:
@@ -60,11 +60,36 @@ cfg_if::cfg_if! {
     } else if #[cfg(feature = "nftnl-1-0-8")] {
         mod nftnl_1_0_8;
         pub use self::nftnl_1_0_8::*;
-    } else if #[cfg(feature = "nftnl-1-0-7")] {
+    } else {
         mod nftnl_1_0_7;
         pub use self::nftnl_1_0_7::*;
-    } else {
-        mod nftnl_1_0_6;
-        pub use self::nftnl_1_0_6::*;
     }
 }
+
+// TODO export "<netfilter/nf_tables.h>"
+pub const NFT_OBJECT_UNSPEC: libc::c_int = 0;
+pub const NFT_OBJECT_COUNTER: libc::c_int = 1;
+pub const NFT_OBJECT_QUOTA: libc::c_int = 2;
+pub const NFT_OBJECT_CT_HELPER: libc::c_int = 3;
+pub const NFT_OBJECT_LIMIT: libc::c_int = 4;
+pub const NFT_OBJECT_CONNLIMIT: libc::c_int = 5;
+pub const NFT_OBJECT_TUNNEL: libc::c_int = 6;
+pub const NFT_OBJECT_CT_TIMEOUT: libc::c_int = 7;
+pub const NFT_OBJECT_SECMARK: libc::c_int = 8;
+pub const NFT_OBJECT_CT_EXPECT: libc::c_int = 9;
+pub const NFT_OBJECT_SYNPROXY: libc::c_int = 10;
+pub const __NFT_OBJECT_MAX: libc::c_int = 11;
+pub const NFT_OBJECT_MAX: libc::c_int = __NFT_OBJECT_MAX - 1;
+
+pub const NFT_LOGLEVEL_EMERG: libc::c_int = 0;
+pub const NFT_LOGLEVEL_ALERT: libc::c_int = 1;
+pub const NFT_LOGLEVEL_CRIT: libc::c_int = 2;
+pub const NFT_LOGLEVEL_ERR: libc::c_int = 3;
+pub const NFT_LOGLEVEL_WARNING: libc::c_int = 4;
+pub const NFT_LOGLEVEL_NOTICE: libc::c_int = 5;
+pub const NFT_LOGLEVEL_INFO: libc::c_int = 6;
+pub const NFT_LOGLEVEL_DEBUG: libc::c_int = 7;
+pub const NFT_LOGLEVEL_AUDIT: libc::c_int = 8;
+pub const __NFT_LOGLEVEL_MAX: libc::c_int = 9;
+pub const NFT_LOGLEVEL_MAX: libc::c_int = __NFT_LOGLEVEL_MAX -1;
+

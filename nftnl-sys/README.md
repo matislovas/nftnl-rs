@@ -18,7 +18,7 @@ This crate has bindings for most versions of [`libnftnl`]. All bindings are gene
 [`bindgen`] via the `generate_bindings.sh` script in this repository.
 
 Only one version of `libnftnl` can be exposed via this crate. By default the crate exports the
-bindings for the oldest supported version (`libnftnl-1.0.6`). To get newer versions activate the
+bindings for the oldest supported version (`libnftnl-1.0.7`). To get newer versions activate the
 corresponding features. See `Cargo.toml` for available features/versions.
 
 So for example, to get bindings to `libnftnl-1.0.9` depend on this crate like this:

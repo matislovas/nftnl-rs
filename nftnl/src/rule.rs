@@ -1,7 +1,10 @@
 use crate::{chain::Chain, expr::Expression, MsgType};
 use nftnl_sys::{self as sys, libc};
-use std::ffi::c_void;
-use std::os::raw::c_char;
+use std::{
+    ffi::{c_void, CStr},
+    fmt,
+    os::raw::c_char,
+};
 
 /// A nftables firewall rule.
 pub struct Rule<'a> {
@@ -67,6 +70,24 @@ impl<'a> Rule<'a> {
     /// [`Chain`]: struct.Chain.html
     pub fn get_chain(&self) -> &Chain<'_> {
         self.chain
+    }
+}
+
+impl<'a> fmt::Debug for Rule<'a> {
+    /// Return a string representation of the rule.
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut buffer: [u8; 4096] = [0; 4096];
+        unsafe {
+            sys::nftnl_rule_snprintf(
+                buffer.as_mut_ptr() as *mut c_char,
+                buffer.len(),
+                self.rule,
+                sys::NFTNL_OUTPUT_DEFAULT,
+                0,
+            );
+        }
+        let s = unsafe { CStr::from_ptr(buffer.as_ptr() as *const c_char) };
+        write!(fmt, "{:?}", s)
     }
 }
 

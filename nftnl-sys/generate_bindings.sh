@@ -19,6 +19,9 @@ bindgen \
     --whitelist-type '^nftnl_.+$' \
     --whitelist-var '^nftnl_.+$' \
     --whitelist-var '^NFTNL_.+$' \
+    --whitelist-var '^NFT_.+$' \
+    --whitelist-var '^nft_.+$' \
+    --whitelist-var '^NF_LOG_.+$' \
     --blacklist-type '(FILE|iovec)' \
     --blacklist-type '^_IO_.+$' \
     --blacklist-type '^__.+$' \

@@ -8,6 +8,19 @@ use std::{
     slice,
 };
 
+bitflags::bitflags! {
+    pub struct TcpFlags: u8 {
+        const FIN =  0x01;
+        const SYN =  0x02;
+        const RST =  0x04;
+        const PSH =  0x08;
+        const ACK =  0x10;
+        const URG =  0x20;
+        const ECE =  0x40;
+        const CWR =  0x80;
+    }
+}
+
 /// Comparison operator.
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum CmpOp {
@@ -160,28 +173,31 @@ impl ToSlice for u8 {
 
 impl ToSlice for u16 {
     fn to_slice(&self) -> Cow<'_, [u8]> {
-        let b0 = (*self & 0x00ff) as u8;
-        let b1 = (*self >> 8) as u8;
+        let big_e = &self.to_be();
+        let b0 = (big_e & 0x00ff) as u8;
+        let b1 = (big_e >> 8) as u8;
         Cow::Owned(vec![b0, b1])
     }
 }
 
 impl ToSlice for u32 {
     fn to_slice(&self) -> Cow<'_, [u8]> {
-        let b0 = *self as u8;
-        let b1 = (*self >> 8) as u8;
-        let b2 = (*self >> 16) as u8;
-        let b3 = (*self >> 24) as u8;
+        let big_e = &self.to_be();
+        let b0 = (big_e >> 0) as u8;
+        let b1 = (big_e >> 8) as u8;
+        let b2 = (big_e >> 16) as u8;
+        let b3 = (big_e >> 24) as u8;
         Cow::Owned(vec![b0, b1, b2, b3])
     }
 }
 
 impl ToSlice for i32 {
     fn to_slice(&self) -> Cow<'_, [u8]> {
-        let b0 = *self as u8;
-        let b1 = (*self >> 8) as u8;
-        let b2 = (*self >> 16) as u8;
-        let b3 = (*self >> 24) as u8;
+        let big_e = &self.to_be();
+        let b0 = (big_e >> 0) as u8;
+        let b1 = (big_e >> 8) as u8;
+        let b2 = (big_e >> 16) as u8;
+        let b3 = (big_e >> 24) as u8;
         Cow::Owned(vec![b0, b1, b2, b3])
     }
 }
@@ -189,6 +205,13 @@ impl ToSlice for i32 {
 impl<'a> ToSlice for &'a str {
     fn to_slice(&self) -> Cow<'_, [u8]> {
         Cow::from(self.as_bytes())
+    }
+}
+
+impl ToSlice for TcpFlags {
+    fn to_slice(&self) -> Cow<'_, [u8]> {
+        let big_e = self.bits.to_be();
+        Cow::Owned(vec![big_e])
     }
 }
 

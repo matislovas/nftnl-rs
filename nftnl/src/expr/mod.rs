@@ -48,6 +48,9 @@ pub use self::immediate::*;
 mod lookup;
 pub use self::lookup::*;
 
+mod log;
+pub use self::log::*;
+
 mod masquerade;
 pub use self::masquerade::*;
 
@@ -59,6 +62,9 @@ pub use self::nat::*;
 
 mod payload;
 pub use self::payload::*;
+
+mod quota_ref;
+pub use self::quota_ref::*;
 
 mod verdict;
 pub use self::verdict::*;
@@ -104,4 +110,12 @@ macro_rules! nft_expr {
     (immediate $expr:ident $value:expr) => {
         nft_expr_immediate!($expr $value)
     };
+    (quota $quota:expr) => {
+        nft_expr_quota!($quota)
+    };
+    (log $( .$meth:ident( $($arg:expr)? ) )* ) => {
+        $crate::expr::Log::new()$(
+            .$meth( $($arg)? )
+        )*
+    }
 }

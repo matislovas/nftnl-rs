@@ -85,6 +85,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.1.0] - 2018-09-10
 ### Added
-- Bindings to `libnftnl` versions `1.0.6` through `1.1.1`
+- Bindings to `libnftnl` versions `1.0.7` through `1.1.1`
 - Initial safe abstraction. Support for batches, tables, chains, rules and sets.
   All with a limited set of expression types.
